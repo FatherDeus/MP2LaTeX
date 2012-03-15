@@ -1,1 +1,104 @@
-a readme
+MP2LaTeX README
+------------------------------------------------------------------------
+
+The Python script parse.py translates a file formatted in a simple math
+syntax into LaTeX (I'll label the format "MP" for convenience - math and
+physics, see). My motivation: LaTeX markup is a pain in the derriere to
+write with all its backslashes and curly braces; it's much easier to
+write with text and whitespace.
+
+------------------------------------------------------------------------
+
+The particulars of the syntax are few:
+
+- The only thing about the math notation that really needs explaining is
+  division syntax. Division starts with a string containing no spaces or
+  *+- operators (those in parens notwithstanding), followed by '/',
+  followed by another chunk that runs until the next *+-
+  operator. Subscripts and superscripts run until a space or a *+-
+  operator. E.g.,
+
+1 + d(x_i^2+y_i^2) / d(x_i)
+
+  will parse as "1+\frac{d(x_{i}^{2}+y_{i}^{2})}{d(x_{i})}".
+
+
+- The space (' ') is a control character. The user's fairly free to use
+  it in math syntax but it's important for control structures.
+
+
+- A line that begins with a backslash ('\') character is a
+  definition. The user defines an element, followed by a space, two '='
+  characters, and a space, followed by the definition written in
+  LaTeX. E.g., the line
+
+\Avec == \vec{A}
+
+  will define a string "Avec", to be appended to the regular expression
+  list, that will be replaced at parse time with the quantity
+  "\vec{A}". The first backslash is cut off - it's there so the parser
+  can find the definitions.
+
+  Consult the code of parse.py for the list of regular expressions (the
+  Greek alphabet plus a few other things). It's a big list, you can't
+  miss it.
+
+
+- A line that begins with 8 spaces is a top-level heading.
+  6 spaces denote a second-level heading.
+  4 spaces denote a third-level heading, e.g. an exercise number.
+  2 spaces denote a fourth-level heading, e.g. the number of a section
+  in an exercise.
+
+
+- A line that begins with 1 space is processed as text (i.e. it doesn't
+  get the '$' charactes). Sections in the line will be parsed as math if
+  they begin with two spaces ("  ") and end with "  " or "." E.g., the
+  line
+
+ The mass will move half the distance in time  t_0  if the mass is doubled.
+
+  is processed as plain text until it hits "  t_0  ", which is parsed as
+  math. The line
+
+   phi_c  is an angle such that  phiddot = 0  , i.e.  mg (sin phi_c - mu cos phi_c) = 0.
+
+  begins with a math expression (note the first space that denotes a
+  text line plus the two starting spaces of the math section make
+  three). The following few words are taken as text. "  phiddot = 0  " is
+  again math, as is "  mg (sin phi_c - mu cos phi_c) = 0." Note that the
+  expression ends with a period and not two spaces.
+
+
+- A line that doesn't begin with a space or a backslash is parsed
+  entirely as math.
+
+
+- Any of these lines can appear at any point in the document. They are
+  processed sequentially - e.g., a definition put at the end of a file
+  is allowed but it won't be used.
+
+
+- Newlines are ignored. Use them freely.
+
+------------------------------------------------------------------------
+
+That's pretty much it. The final product isn't nearly finished - it
+still trips up on some simple things. I need to rewrite the parse
+function and clean out the artifacts left over from my first, failed,
+attempts.
+
+"3test.mp" is an example file. The file "run" looks like this:
+
+./parse.py $1
+pdflatex out.tex
+evince out.pdf
+
+It runs parse.py on a file of choice, which produces out.tex, then
+converts it into PDF and views it. This is the general procedure for
+processing these files. Run "./run 3test.mp" to get the example PDF.
+
+It's easiest to learn from example, probably, so I'd suggest taking a
+gander at 3test.mp.
+
+- Anton Bovin, 14 March 2012
